@@ -67,6 +67,34 @@ class MergeLayer(nn.Module):
         h = self.fc2(self.act(self.fc1(x)))
         return h
 
+    
+class HadamardMLP(nn.Module):
+
+    def __init__(self, input_dim1: int, input_dim2: int, hidden_dim: int, output_dim: int):
+        """
+        Perform HadamardMLP as decoder for link prediction.
+        :param input_dim1: int, dimension of first input
+        :param input_dim2: int, dimension of the second input
+        :param hidden_dim: int, hidden dimension
+        :param output_dim: int, dimension of the output
+        """
+        super().__init__()
+        self.fc1 = nn.Linear(input_dim1, hidden_dim)
+        self.fc2 = nn.Linear(hidden_dim, output_dim)
+        self.act = nn.ReLU()
+
+    def forward(self, input_1: torch.Tensor, input_2: torch.Tensor):
+        """
+        merge and project the inputs
+        :param input_1: Tensor, shape (*, input_dim1)
+        :param input_2: Tensor, shape (*, input_dim2)
+        :return:
+        """
+        # Tensor, shape (*, input_dim1=input_dim2)
+        x = torch.mul(input_1, input_2)
+        # Tensor, shape (*, output_dim)
+        h = self.fc2(self.act(self.fc1(x)))
+        return h
 
 class MLPClassifier(nn.Module):
     def __init__(self, input_dim: int, dropout: float = 0.1):
