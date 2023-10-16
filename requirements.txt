@@ -19,7 +19,6 @@ scikit-learn==1.3.0+computecanada
 scipy==1.10.1+computecanada
 six==1.16.0+computecanada
 sklearn==0.0+computecanada
--e git+git@github.com:shenyangHuang/TGB.git@45ce2e72f38bd2b5cbc86df58305fb598c4b5e30#egg=tgb
 threadpoolctl==3.1.0+computecanada
 torch==1.13.1+computecanada
 torch-geometric==2.3.0+computecanada
