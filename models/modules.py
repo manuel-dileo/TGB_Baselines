@@ -66,11 +66,9 @@ class MergeLayer(nn.Module):
         # Tensor, shape (*, output_dim)
         h = self.fc2(self.act(self.fc1(x)))
         return h
-
     
 class HadamardMLP(nn.Module):
-
-    def __init__(self, input_dim1: int, input_dim2: int, hidden_dim: int, output_dim: int):
+    def __init__(self, input_dim1: int, input_dim2: int, hidden_dim: int, output_dim: int, num_layers: int = 2):
         """
         Perform HadamardMLP as decoder for link prediction.
         :param input_dim1: int, dimension of first input
@@ -79,22 +77,24 @@ class HadamardMLP(nn.Module):
         :param output_dim: int, dimension of the output
         """
         super().__init__()
-        self.fc1 = nn.Linear(input_dim1, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, output_dim)
-        self.act = nn.ReLU()
+
+        self.lins = nn.ModuleList()
+        self.lins.append(nn.Linear(input_dim1, hidden_dim))
+        for _ in range(num_layers - 2):
+            self.lins.append(torch.nn.Linear(hidden_dim, hidden_dim))
+        self.lins.append(torch.nn.Linear(hidden_dim, output_dim))
+
+    def reset_parameters(self):
+        for lin in self.lins:
+            lin.reset_parameters()
 
     def forward(self, input_1: torch.Tensor, input_2: torch.Tensor):
-        """
-        merge and project the inputs
-        :param input_1: Tensor, shape (*, input_dim1)
-        :param input_2: Tensor, shape (*, input_dim2)
-        :return:
-        """
-        # Tensor, shape (*, input_dim1=input_dim2)
-        x = torch.mul(input_1, input_2)
-        # Tensor, shape (*, output_dim)
-        h = self.fc2(self.act(self.fc1(x)))
-        return h
+        x = input_1 * input_2
+        for lin in self.lins[:-1]:
+            x = lin(x)
+            x = F.relu(x)
+        x = self.lins[-1](x)
+        return torch.sigmoid(x)
 
 class MLPClassifier(nn.Module):
     def __init__(self, input_dim: int, dropout: float = 0.1):
